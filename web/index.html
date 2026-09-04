@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Sticky-Note Brain — How AI Remembers Without Running Out of Space</title>
+<meta name="description" content="An interactive explainer: how a fixed amount of memory can remember an unlimited stream of information — and where it breaks. Connected to Pathway's Dragon Hatchling (BDH).">
+<style>
+  :root{
+    --bg:#0b0d12; --panel:#12151c; --panel2:#171b24; --ink:#e9ecf3; --muted:#8b93a7;
+    --accent:#7c5cff; --accent2:#25d0a4; --warn:#ff6b6b; --gold:#ffb454; --line:#232838;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.6}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 20px 120px}
+  a{color:var(--accent2)}
+
+  /* ---------- HERO ---------- */
+  .hero{background:radial-gradient(circle at 20% -10%, #241a4a 0%, #0b0d12 55%);padding:56px 20px 40px;text-align:center;border-bottom:1px solid var(--line)}
+  .dragon{font-size:64px;line-height:1;filter:drop-shadow(0 0 24px #7c5cff88);animation:float 3.5s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  .kicker{color:var(--muted);font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  h1{font-size:2.1rem;margin:6px 0 10px;font-weight:800;max-width:760px;margin-left:auto;margin-right:auto}
+  .hero p{color:var(--muted);max-width:620px;margin:0 auto;font-size:1.05rem}
+
+  /* ---------- MODE TOGGLE ---------- */
+  .modebar{position:sticky;top:0;z-index:50;background:#0b0d12ee;backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 20px}
+  .modebar-inner{max-width:1040px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+  .modebtn{background:var(--panel2);border:1px solid var(--line);color:var(--muted);padding:9px 18px;border-radius:999px;font-weight:700;font-size:.9rem;cursor:pointer;transition:.15s}
+  .modebtn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .modebtn:hover{color:var(--ink)}
+
+  h2{font-size:1.3rem;margin:52px 0 12px;font-weight:800}
+  .h2icon{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:var(--panel2);margin-right:10px;font-size:1.1rem;vertical-align:middle}
+
+  .tag{display:inline-block;font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:20px;font-weight:700;margin-right:6px}
+  .tag.toy{background:#3a2a12;color:#ffb454}
+  .tag.real{background:#12351f;color:#4fd47a}
+  .tag.pre{background:#132a3a;color:#5ab8ff}
+
+  .claim{background:linear-gradient(135deg,#1b1030,#0f1730);border:1px solid #342a5c;border-radius:16px;padding:22px 24px;margin:16px 0 8px;font-size:1.08rem}
+  .claim b{color:#b39dff}
+  .sub{color:var(--muted);font-size:.95rem}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:14px 0;box-shadow:0 6px 24px -12px #00000080}
+  .grid2{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+  @media (max-width:760px){.grid2{grid-template-columns:1fr}}
+
+  .ctrl{margin:16px 0}
+  .ctrl label{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:5px}
+  .ctrl label span.val{color:var(--accent2);font-weight:800}
+  input[type=range]{width:100%;accent-color:var(--accent);height:6px}
+  .stat-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+  .stat{flex:1;min-width:120px;background:var(--panel2);border-radius:12px;padding:12px 14px;border:1px solid var(--line);text-align:center}
+  .stat .n{font-size:1.7rem;font-weight:800}
+  .stat .l{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-top:2px}
+  canvas{width:100%;background:#0a0c11;border-radius:12px;border:1px solid var(--line)}
+  button{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-weight:800;cursor:pointer;font-size:.85rem;transition:.15s}
+  button:hover{transform:translateY(-1px);box-shadow:0 6px 16px -6px #7c5cffaa}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  button.warn{background:var(--warn)}
+  .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:700;font-size:.75rem;text-transform:uppercase}
+  code{background:#1c2130;padding:2px 7px;border-radius:6px;font-size:.85em}
+  .foot{color:var(--muted);font-size:.8rem;margin-top:60px;border-top:1px solid var(--line);padding-top:16px;text-align:center}
+  .qbox{background:var(--panel2);border-radius:12px;padding:16px;margin-top:10px}
+  textarea{width:100%;min-height:70px;background:#0a0c11;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:inherit}
+  .miniflag{font-size:.78rem;color:var(--muted);margin-top:8px}
+
+  /* ELI5 styles */
+  .story{display:flex;gap:16px;align-items:flex-start;margin:16px 0}
+  .story .emoji{font-size:2.2rem;flex:0 0 auto}
+  .story .txt{flex:1;font-size:1.05rem}
+  .stickynote{display:inline-block;background:#ffe17a;color:#1a1305;border-radius:6px;padding:6px 10px;font-weight:700;font-size:.85rem;margin:3px;transform:rotate(-2deg);box-shadow:0 3px 6px #0006}
+  .stickynote:nth-child(even){transform:rotate(2deg);background:#a6f0d0}
+  .stickynote:nth-child(3n){transform:rotate(-1deg);background:#ffb0c4}
+  .board{background:#3a2a1c;border-radius:14px;padding:18px;margin:14px 0;min-height:70px}
+  .simple-only{display:block}
+  .tech-only{display:none}
+  body.mode-tech .simple-only{display:none}
+  body.mode-tech .tech-only{display:block}
+  .kidbig{font-size:1.5rem;font-weight:800;text-align:center;margin:14px 0}
+</style>
+</head>
+<body class="mode-simple">
+
+<div class="modebar">
+  <div class="modebar-inner">
+    <button class="modebtn active" id="btn-simple" onclick="setMode('simple')">🧒 Explain it simply</button>
+    <button class="modebtn" id="btn-tech" onclick="setMode('tech')">🔬 Show me the technical version</button>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="dragon">🐉</div>
+  <div class="kicker">DataForge 2026 · Pathway Track — Explain the Frontier</div>
+  <h1>Can a brain remember forever&nbsp;— without running out of space?</h1>
+  <p>Play with a real, tiny memory system below. Watch it remember things perfectly… and then watch it start
+  forgetting once you give it too much to hold. That's the whole lesson, and you can prove it yourself.</p>
+</div>
+
+<div class="wrap">
+
+  <!-- ================= SIMPLE MODE ================= -->
+  <div class="simple-only">
+    <h2><span class="h2icon">📋</span>The whiteboard with a limited number of sticky notes</h2>
+    <div class="panel">
+      <div class="story">
+        <div class="emoji">🧠</div>
+        <div class="txt">Imagine your brain is a <b>small whiteboard</b>. Every time you learn something new — a
+        friend's name, a phone number, a fact — you write it on a <b>sticky note</b> and stick it on the board.</div>
+      </div>
+      <div class="story">
+        <div class="emoji">📝</div>
+        <div class="txt">If the board has plenty of empty space, every note is easy to read. You can look at any
+        note and know exactly what it says. <b>Perfect memory.</b></div>
+      </div>
+      <div class="board" id="board-empty"></div>
+      <div class="story">
+        <div class="emoji">😵</div>
+        <div class="txt">But the whiteboard doesn't grow. If you keep sticking on <i>more and more</i> notes, they
+        start to <b>overlap and cover each other up</b>. Now when you look for one note, you might read the wrong
+        one underneath it by mistake.</div>
+      </div>
+      <div class="board" id="board-full"></div>
+      <div class="kidbig">That's exactly what happens inside the AI system below. 👇</div>
+    </div>
+
+    <h2><span class="h2icon">🎮</span>Try it yourself</h2>
+    <div class="panel">
+      <p class="sub">This isn't a cartoon — it's a real tiny memory, computing for real, right now, in your browser.
+      Move the sticky-note slider and watch what happens.</p>
+      <div class="ctrl">
+        <label>How many sticky notes am I putting on the board? <span class="val" id="v_load_s">128</span></label>
+        <input type="range" id="s_load_simple" min="10" max="1000" step="10" value="128">
+      </div>
+      <div class="stat-row">
+        <div class="stat"><div class="n" id="stat_acc_s">–</div><div class="l">How many I remembered correctly</div></div>
+        <div class="stat"><div class="n" id="stat_board_s">👍</div><div class="l">Is the board still readable?</div></div>
+      </div>
+      <div class="btnrow">
+        <button onclick="setLoadSimple(30)">A few notes (easy)</button>
+        <button class="ghost" onclick="setLoadSimple(128)">Board is full</button>
+        <button class="warn" onclick="setLoadSimple(900)">WAY too many notes 😬</button>
+      </div>
+      <div id="simple-canvas-wrap" style="margin-top:16px">
+        <canvas id="stickyCanvas" height="180"></canvas>
+      </div>
+      <div class="kidbig" id="simple-verdict"></div>
+    </div>
+
+    <h2><span class="h2icon">🐉</span>What does this have to do with the dragon?</h2>
+    <div class="panel">
+      <div class="story">
+        <div class="emoji">🐲</div>
+        <div class="txt"><b>Dragon Hatchling (BDH)</b> is a real AI system, built by a company called Pathway, that
+        works kind of like a brain instead of a normal computer program. Instead of writing every single thing it
+        reads onto an ever-growing pile of paper (like most AI does), it uses the <b>same "sticky notes on a small
+        whiteboard" trick</b> you just tried — connections between its "neurons" get stronger when something
+        matters, like writing on a sticky note, and old ones fade or blend together if too much gets crammed in.</div>
+      </div>
+      <div class="story">
+        <div class="emoji">✨</div>
+        <div class="txt">One important twist: BDH only "writes" using a <b>small number of very clear, spread-out
+        notes</b> (not a huge messy pile all bunched together). You can test why that helps too — try the technical
+        view and play with the "sparsity" slider!</div>
+      </div>
+    </div>
+
+    <h2><span class="h2icon">🎓</span>What you just learned</h2>
+    <div class="panel">
+      <p style="font-size:1.05rem">✅ A small memory can hold information from a <i>never-ending</i> stream, without
+      ever needing more space.<br>
+      ✅ The trade-off: if you cram in too much, things start blending together and it makes mistakes.<br>
+      ✅ Real AI (BDH) uses this exact idea — and uses a trick (keeping notes small and spread out) to delay the
+      mix-ups as long as possible.</p>
+      <div class="qbox">
+        <p class="sub" style="margin-top:0">In your own words — why does a whiteboard with too many sticky notes
+        get confusing?</p>
+        <textarea placeholder="Type your answer here — nobody's grading it, it's just for you."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TECHNICAL MODE ================= -->
+  <div class="tech-only">
+
+  <div class="claim">
+    <b>Central claim:</b> A fixed-size <code>n×d</code> associative state, written one token at a time with a
+    single Hebbian outer-product update <code>S ← S + φ(k)vᵀ</code>, can retrieve key→value associations from a
+    sequence of <i>unbounded length</i> without allocating new memory per token — but once the number of
+    associations written exceeds roughly the key dimension <code>n</code> (its capacity), retrieval accuracy
+    degrades because overlapping sparse keys interfere with each other in the same fixed slots.
+  </div>
+  <p class="sub">Concept: <b>Associative Memory &amp; Fast Weights</b> · connected to <b>Dragon Hatchling (BDH)</b>.
+  Every number below is computed live in your browser from the same equations as
+  <code>core/linear_memory.py</code> in the source repo — nothing here is a scripted animation.</p>
+
+  <h2><span class="h2icon">1</span>The system, already running</h2>
+  <div class="panel">
+    <div class="grid2">
+      <div>
+        <div class="ctrl">
+          <label>Memory capacity — key dimension n <span class="val" id="v_n">128</span></label>
+          <input type="range" id="s_n" min="16" max="384" step="8" value="128">
+        </div>
+        <div class="ctrl">
+          <label>Load — associations written, as a multiple of n <span class="val" id="v_load">1.0×</span></label>
+          <input type="range" id="s_load" min="0.1" max="8" step="0.1" value="1.0">
+        </div>
+        <div class="ctrl">
+          <label>Sparsity of each key (share of active units) <span class="val" id="v_sp">5%</span></label>
+          <input type="range" id="s_sp" min="1" max="100" step="1" value="5">
+        </div>
+        <div class="ctrl">
+          <label>Retrieval-cue noise (interference at read time) <span class="val" id="v_noise">0.00</span></label>
+          <input type="range" id="s_noise" min="0" max="150" step="1" value="0">
+        </div>
+        <div class="btnrow">
+          <button onclick="preset('hook')">Reset to preset</button>
+          <button class="ghost" onclick="preset('capacity')">Fill to exact capacity (1×)</button>
+          <button class="warn" onclick="preset('break')">Break it (overload + dense keys)</button>
+        </div>
+      </div>
+      <div>
+        <div class="stat-row">
+          <div class="stat"><div class="n" id="stat_acc">–</div><div class="l">Retrieval accuracy</div></div>
+          <div class="stat"><div class="n" id="stat_N">–</div><div class="l">Associations written (N)</div></div>
+          <div class="stat"><div class="n" id="stat_state">–</div><div class="l">Fixed state size</div></div>
+          <div class="stat"><div class="n" id="stat_kv">–</div><div class="l">Equivalent KV-cache size</div></div>
+        </div>
+        <div class="miniflag"><span class="tag real">Live</span>recomputed on every slider move, in your browser.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2><span class="h2icon">2</span>What's actually happening (mechanism)</h2>
+  <div class="panel">
+    <p><b>Write</b> (one Hebbian step per token, memory size never changes):</p>
+    <p><code>k = sparse_nonneg_key(n)</code> &nbsp;&nbsp; <code>S ← S + φ(k) · onehot(class)ᵀ</code>, &nbsp; φ = ReLU</p>
+    <p><b>Read</b> (associative recall from a cue, no search over history):</p>
+    <p><code>scores = φ(cue) · S</code> &nbsp;&nbsp; <code>prediction = argmax(scores)</code></p>
+    <p class="sub">This is exactly the "linear attention as fast weights" view: instead of comparing a query against
+    every past key (softmax attention, O(N) memory and O(N) compute per query), the past is compressed additively
+    into one matrix S. Reading is one dot product against whatever S currently holds.</p>
+  </div>
+
+  <h2><span class="h2icon">3</span>State &amp; ground truth vs. retrieved</h2>
+  <div class="panel">
+    <div class="grid2">
+      <div>
+        <div class="sub">Synaptic state matrix S (n × classes). Brighter = stronger accumulated weight.</div>
+        <canvas id="heat" height="220"></canvas>
+      </div>
+      <div>
+        <div class="sub">Ground truth class vs. what the memory retrieves, for a sample of 24 stored associations.
+        The gap between the two rows <i>is</i> the lesson.</div>
+        <canvas id="truthbar" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <h2><span class="h2icon">4</span>Break it — the failure curve</h2>
+  <div class="panel">
+    <p class="sub">Accuracy vs. load factor (N / n), from a precomputed sweep (<span class="tag pre">Precomputed</span>
+    averaged over 5 seeds, generated by <code>experiments/run_experiments.py</code>) with your current live point
+    overlaid as a dot.</p>
+    <canvas id="failcurve" height="220"></canvas>
+    <p class="sub" id="fail_explain"></p>
+  </div>
+
+  <h2><span class="h2icon">5</span>Memory cost: fixed state vs. growing KV-cache</h2>
+  <div class="panel">
+    <canvas id="bytesplot" height="200"></canvas>
+    <p class="sub">The associative state's parameter count never changes as N grows — that is the whole appeal.
+    A conventional attention KV-cache keeps perfect recall (accuracy always 1.0) by paying for it in memory that
+    grows linearly with sequence length. The trade the claim is about: <b>constant memory vs. interference</b>,
+    against <b>growing memory vs. perfect recall</b>.</p>
+  </div>
+
+  <h2><span class="h2icon">6</span>The BDH connection</h2>
+  <div class="panel">
+    <p><span class="tag real">Real published mechanism</span> The Dragon Hatchling paper (Kosowski et al., 2025)
+    describes BDH's attention as arising from a local, biologically-plausible edge-reweighting rule that combines
+    Hebbian learning with modus-ponens–like inference over a graph of neuron particles, rather than dense
+    query/key/value matrix multiplication. Its GPU-friendly formulation, BDH-GPU, is explicitly built from
+    ReLU-low-rank transformations with <b>linear attention</b> and non-negative, sparse neuron activations
+    (reported around ~5% active at a time) — the same three ingredients (Hebbian outer-product writes, ReLU
+    non-negativity, and sparsity) that this toy memory uses above.</p>
+    <p><span class="tag toy">Our educational toy model</span> is a minimal, from-scratch instance of that
+    mechanism at a scale you can inspect (n in the hundreds, not BDH's trained parameter count). It is
+    <b>not</b> the official BDH implementation, was not trained on language data, and makes no claim to reproduce
+    BDH's reported benchmark numbers.</p>
+    <p><span class="tag real">Real published result</span> BDH-CQ (Pathway, 2026), a later system in the BDH
+    family, stores task demonstrations by updating recurrent memory at inference time — additively, per
+    demonstration — rather than by a gradient step, and reasons over that memory in a continuous latent workspace
+    instead of a written chain of thought. On the public ARC-AGI-1 benchmark, Pathway reports a 150M-parameter
+    BDH-CQ configuration reaching 29.5% pass@2 at roughly $0.0007 per task, which independent testers (Bielik AI
+    and NYU, per Pathway's own reporting) reproduced. This is a <i>developer-reported benchmark result,
+    independently reproduced on that specific benchmark</i> — not a claim about deployment, and not evidence about
+    performance on other tasks.</p>
+    <p class="sub">Full sourcing for every claim above is in <code>SOURCES.md</code>.</p>
+  </div>
+
+  <h2><span class="h2icon">7</span>How this differs from a plain Transformer</h2>
+  <div class="panel">
+    <table>
+      <tr><th></th><th>Softmax attention / KV-cache</th><th>Fixed-size associative memory (this demo, and BDH's linear-attention view)</th></tr>
+      <tr><td>Memory vs. sequence length</td><td>Grows linearly, O(N)</td><td>Constant, O(1)</td></tr>
+      <tr><td>Per-token write cost</td><td>Append to cache</td><td>One outer-product add</td></tr>
+      <tr><td>Recall of old associations</td><td>Exact (until evicted)</td><td>Degrades under load — interference</td></tr>
+      <tr><td>Failure mode</td><td>Cache eviction / context limit</td><td>Overwriting / blending of overlapping keys</td></tr>
+      <tr><td>Where BDH sits</td><td colspan="2">BDH-GPU uses the linear-attention / fixed-state column above; its brain-inspired formulation frames this as synaptic plasticity rather than a cache.</td></tr>
+    </table>
+  </div>
+
+  <h2><span class="h2icon">8</span>Your turn</h2>
+  <div class="panel">
+    <p>In your own words: why does raising the sparsity slider from 5% toward 100% make interference <i>worse</i>,
+    even though the state matrix S is the same size either way? (Try it above, then answer.)</p>
+    <div class="qbox">
+      <textarea placeholder="Type your explanation here — this isn't graded, it's for you to check your own understanding."></textarea>
+    </div>
+  </div>
+
+  </div><!-- /tech-only -->
+
+  <div class="foot">
+    <span class="tag toy">Toy model</span> educational reimplementation, not official BDH ·
+    <span class="tag pre">Precomputed</span> failure curve, 5-seed average ·
+    <span class="tag real">Live</span> everything else, recomputed on every interaction ·
+    See README.md, SOURCES.md and AI_DISCLOSURE.md in the repository for full provenance.
+  </div>
+</div>
+
+<script>
+// ======================================================================
+// PRECOMPUTED DATA — embedded directly so this single file works on any
+// static host (GitHub Pages, Netlify, Vercel) with zero extra requests.
+// Generated by experiments/run_experiments.py from core/linear_memory.py.
+// ======================================================================
+const PRECOMP = {"label":"PRECOMPUTED — generated by experiments/run_experiments.py from core/linear_memory.py. Real numpy computation, not illustrative.","fixed_params":{"n":128,"num_classes":32,"sparsity_default":0.05},"load_factor_sweep":[{"load_factor":0.1,"num_written":13,"accuracy_mean":1.0,"accuracy_min":1.0,"accuracy_max":1.0},{"load_factor":0.25,"num_written":32,"accuracy_mean":0.98125,"accuracy_min":0.90625,"accuracy_max":1.0},{"load_factor":0.5,"num_written":64,"accuracy_mean":0.965625,"accuracy_min":0.953125,"accuracy_max":0.984375},{"load_factor":0.75,"num_written":96,"accuracy_mean":0.9583333333333334,"accuracy_min":0.90625,"accuracy_max":0.9895833333333334},{"load_factor":1.0,"num_written":128,"accuracy_mean":0.921875,"accuracy_min":0.8828125,"accuracy_max":0.953125},{"load_factor":1.25,"num_written":160,"accuracy_mean":0.8887499999999999,"accuracy_min":0.8625,"accuracy_max":0.9125},{"load_factor":1.5,"num_written":192,"accuracy_mean":0.840625,"accuracy_min":0.7916666666666666,"accuracy_max":0.875},{"load_factor":2.0,"num_written":256,"accuracy_mean":0.74765625,"accuracy_min":0.71875,"accuracy_max":0.78515625},{"load_factor":2.5,"num_written":320,"accuracy_mean":0.688125,"accuracy_min":0.66875,"accuracy_max":0.70625},{"load_factor":3.0,"num_written":384,"accuracy_mean":0.6140625,"accuracy_min":0.5885416666666666,"accuracy_max":0.6380208333333334},{"load_factor":4.0,"num_written":512,"accuracy_mean":0.479296875,"accuracy_min":0.462890625,"accuracy_max":0.49609375},{"load_factor":5.0,"num_written":640,"accuracy_mean":0.406875,"accuracy_min":0.3953125,"accuracy_max":0.425},{"load_factor":6.0,"num_written":768,"accuracy_mean":0.33723958333333337,"accuracy_min":0.3190104166666667,"accuracy_max":0.35546875},{"load_factor":8.0,"num_written":1024,"accuracy_mean":0.2875,"accuracy_min":0.28125,"accuracy_max":0.298828125}],"sparsity_sweep":[{"sparsity":0.01,"accuracy_mean":0.33984375,"accuracy_min":0.31640625,"accuracy_max":0.35546875},{"sparsity":0.02,"accuracy_mean":0.6953125,"accuracy_min":0.6640625,"accuracy_max":0.71875},{"sparsity":0.05,"accuracy_mean":0.740625,"accuracy_min":0.7109375,"accuracy_max":0.7734375},{"sparsity":0.1,"accuracy_mean":0.78671875,"accuracy_min":0.73828125,"accuracy_max":0.8046875},{"sparsity":0.15,"accuracy_mean":0.78046875,"accuracy_min":0.71875,"accuracy_max":0.83984375},{"sparsity":0.2,"accuracy_mean":0.72109375,"accuracy_min":0.66015625,"accuracy_max":0.80078125},{"sparsity":0.3,"accuracy_mean":0.57265625,"accuracy_min":0.453125,"accuracy_max":0.7421875},{"sparsity":0.4,"accuracy_mean":0.425,"accuracy_min":0.31640625,"accuracy_max":0.55078125},{"sparsity":0.6,"accuracy_mean":0.23671875,"accuracy_min":0.109375,"accuracy_max":0.3984375},{"sparsity":0.8,"accuracy_mean":0.18359375,"accuracy_min":0.08203125,"accuracy_max":0.296875},{"sparsity":1.0,"accuracy_mean":0.13359375,"accuracy_min":0.06640625,"accuracy_max":0.19921875}],"noise_sweep":[{"noise":0.0,"accuracy_mean":0.9375,"accuracy_min":0.90625,"accuracy_max":0.9583333333333334},{"noise":0.02,"accuracy_mean":0.925,"accuracy_min":0.8854166666666666,"accuracy_max":0.9479166666666666},{"noise":0.05,"accuracy_mean":0.8979166666666666,"accuracy_min":0.8854166666666666,"accuracy_max":0.90625},{"noise":0.1,"accuracy_mean":0.8333333333333334,"accuracy_min":0.8020833333333334,"accuracy_max":0.8645833333333334},{"noise":0.15,"accuracy_mean":0.7125,"accuracy_min":0.6145833333333334,"accuracy_max":0.7708333333333334},{"noise":0.2,"accuracy_mean":0.5458333333333333,"accuracy_min":0.46875,"accuracy_max":0.6354166666666666},{"noise":0.3,"accuracy_mean":0.31666666666666665,"accuracy_min":0.2708333333333333,"accuracy_max":0.40625},{"noise":0.5,"accuracy_mean":0.18125,"accuracy_min":0.13541666666666666,"accuracy_max":0.21875},{"noise":0.8,"accuracy_mean":0.11458333333333333,"accuracy_min":0.0625,"accuracy_max":0.14583333333333334},{"noise":1.2,"accuracy_mean":0.09375,"accuracy_min":0.052083333333333336,"accuracy_max":0.125}],"kv_cache_growth":[{"num_written":100,"accuracy":1.0,"bytes":3200},{"num_written":200,"accuracy":1.0,"bytes":6400},{"num_written":300,"accuracy":1.0,"bytes":9600},{"num_written":400,"accuracy":1.0,"bytes":12800},{"num_written":500,"accuracy":1.0,"bytes":16000},{"num_written":600,"accuracy":1.0,"bytes":19200},{"num_written":700,"accuracy":1.0,"bytes":22400},{"num_written":800,"accuracy":1.0,"bytes":25600},{"num_written":900,"accuracy":1.0,"bytes":28800},{"num_written":1000,"accuracy":1.0,"bytes":32000},{"num_written":1100,"accuracy":1.0,"bytes":35200},{"num_written":1200,"accuracy":1.0,"bytes":38400},{"num_written":1300,"accuracy":1.0,"bytes":41600},{"num_written":1400,"accuracy":1.0,"bytes":44800},{"num_written":1500,"accuracy":1.0,"bytes":48000},{"num_written":1600,"accuracy":1.0,"bytes":51200},{"num_written":1700,"accuracy":1.0,"bytes":54400},{"num_written":1800,"accuracy":1.0,"bytes":57600},{"num_written":1900,"accuracy":1.0,"bytes":60800},{"num_written":2000,"accuracy":1.0,"bytes":64000}],"fixed_state_bytes_at_default":262144};
+
+// ---------- Same math as core/linear_memory.py, ported to JS ----------
+function mulberry32(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function randn(rng){let u=0,v=0;while(u===0)u=rng();while(v===0)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function relu(v){return v.map(x=>Math.max(0,x));}
+function norm(v){return Math.sqrt(v.reduce((s,x)=>s+x*x,0));}
+
+function makeSparseKey(n, sparsity, rng){
+  let raw=[]; for(let i=0;i<n;i++) raw.push(randn(rng));
+  let k=relu(raw);
+  let nActive=Math.max(1,Math.round(sparsity*n));
+  if(nActive<n){
+    let idx=[...Array(n).keys()];
+    for(let i=idx.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}
+    const zeroSet=new Set(idx.slice(nActive));
+    for(const z of zeroSet) k[z]=0;
+  }
+  const nn=norm(k);
+  return nn>0 ? k.map(x=>x/nn) : k;
+}
+
+function runAssociativeMemory(n, numClasses, numWritten, sparsity, noise, seed){
+  const rng=mulberry32(seed);
+  const S=Array.from({length:n},()=>new Float64Array(numClasses));
+  const keys=[]; const classes=[];
+  for(let i=0;i<numWritten;i++){
+    const k=makeSparseKey(n,sparsity,rng);
+    keys.push(k);
+    const c=Math.floor(rng()*numClasses);
+    classes.push(c);
+    for(let a=0;a<n;a++){ if(k[a]!==0) S[a][c]+=k[a]; }
+  }
+  let correct=0;
+  const samples=[];
+  for(let i=0;i<numWritten;i++){
+    let cue=keys[i];
+    if(noise>0){ cue=cue.map(x=>Math.max(0,x+randn(rng)*noise)); }
+    const scores=new Float64Array(numClasses);
+    for(let a=0;a<n;a++){ const ca=cue[a]; if(ca!==0){ for(let c=0;c<numClasses;c++) scores[c]+=ca*S[a][c]; } }
+    let pred=0,best=-Infinity; for(let c=0;c<numClasses;c++) if(scores[c]>best){best=scores[c];pred=c;}
+    const ok = pred===classes[i]; if(ok) correct++;
+    if(i<24) samples.push({truth:classes[i],pred});
+  }
+  return {accuracy: numWritten>0?correct/numWritten:1, S, samples, numWritten};
+}
+
+// ---------- Mode toggle ----------
+function setMode(m){
+  document.body.classList.toggle('mode-tech', m==='tech');
+  el('btn-simple').classList.toggle('active', m==='simple');
+  el('btn-tech').classList.toggle('active', m==='tech');
+  if(m==='tech'){ recompute(); } else { recomputeSimple(); }
+}
+
+// ---------- UI wiring ----------
+const el=id=>document.getElementById(id);
+
+function fmtBytes(b){
+  if(b<1024) return b+' B';
+  if(b<1024*1024) return (b/1024).toFixed(1)+' KB';
+  return (b/1024/1024).toFixed(2)+' MB';
+}
+
+function recompute(){
+  const n=parseInt(el('s_n').value);
+  const load=parseFloat(el('s_load').value);
+  const sparsityPct=parseInt(el('s_sp').value);
+  const noise=parseInt(el('s_noise').value)/100;
+  el('v_n').textContent=n;
+  el('v_load').textContent=load.toFixed(1)+'×';
+  el('v_sp').textContent=sparsityPct+'%';
+  el('v_noise').textContent=noise.toFixed(2);
+
+  const numClasses=32;
+  const N=Math.max(1,Math.round(load*n));
+  const res=runAssociativeMemory(n,numClasses,N,sparsityPct/100,noise,1234);
+
+  el('stat_acc').textContent=(res.accuracy*100).toFixed(1)+'%';
+  el('stat_N').textContent=N;
+  const stateBytes=n*numClasses*8;
+  const kvBytes=N*32;
+  el('stat_state').textContent=fmtBytes(stateBytes);
+  el('stat_kv').textContent=fmtBytes(kvBytes);
+
+  drawHeat(res.S, n, numClasses);
+  drawTruthBars(res.samples);
+  drawFailCurve(load, res.accuracy);
+  drawBytesPlot(n, numClasses);
+
+  el('fail_explain').textContent = res.accuracy > 0.9
+    ? "At this load the memory is under capacity: keys rarely collide, so retrieval is nearly perfect."
+    : res.accuracy > 0.6
+    ? "You're past capacity (N > n): overlapping sparse keys are starting to blend their written values together."
+    : "Heavy interference: many keys share active dimensions, so the retrieved scores for the wrong class often beat the right one.";
+}
+
+function preset(name){
+  if(name==='hook'){ el('s_n').value=128; el('s_load').value=1.0; el('s_sp').value=5; el('s_noise').value=0; }
+  if(name==='capacity'){ el('s_load').value=1.0; }
+  if(name==='break'){ el('s_load').value=8; el('s_sp').value=100; el('s_noise').value=40; }
+  recompute();
+}
+
+['s_n','s_load','s_sp','s_noise'].forEach(id=>el(id).addEventListener('input',recompute));
+
+// ---------- Simple-mode wiring ----------
+function setLoadSimple(v){ el('s_load_simple').value=v; recomputeSimple(); }
+
+function recomputeSimple(){
+  const N=parseInt(el('s_load_simple').value);
+  el('v_load_s').textContent=N;
+  const n=128;
+  const res=runAssociativeMemory(n,32,N,0.05,0,1234);
+  el('stat_acc_s').textContent=Math.round(res.accuracy*100)+'%';
+  const ok = res.accuracy>0.85;
+  el('stat_board_s').textContent = ok ? '👍' : (res.accuracy>0.55 ? '😕' : '😵');
+  el('simple-verdict').textContent = ok
+    ? "The board still has room — almost every sticky note is remembered correctly!"
+    : (res.accuracy>0.55
+      ? "Getting crowded — some notes are starting to blend together."
+      : "Way too many notes for this board — lots of mix-ups now!");
+  drawStickyBoard(N, res.accuracy);
+}
+
+function drawStickyBoard(N, accuracy){
+  const canvas=el('stickyCanvas'); const {ctx,w,h}=setupCanvas(canvas);
+  ctx.fillStyle='#241a12'; ctx.fillRect(0,0,w,h);
+  const notesToDraw=Math.min(N, 220);
+  const colors=['#ffe17a','#a6f0d0','#ffb0c4','#a9c8ff','#ffd1a6'];
+  const rng=mulberry32(7);
+  for(let i=0;i<notesToDraw;i++){
+    const spread = 1 - Math.min(1, N/500); // less spread as N grows -> visual crowding
+    const x = 10 + rng()* (w-40);
+    const y = 10 + rng()* (h-40);
+    const size = 26;
+    ctx.save();
+    ctx.translate(x+size/2,y+size/2);
+    ctx.rotate((rng()-0.5)*0.6);
+    ctx.fillStyle = colors[i%colors.length];
+    ctx.globalAlpha = notesToDraw>120 ? 0.55 : 0.9;
+    ctx.fillRect(-size/2,-size/2,size,size);
+    ctx.restore();
+  }
+  ctx.globalAlpha=1;
+  ctx.fillStyle='#e9ecf3'; ctx.font='12px sans-serif'; ctx.textAlign='left';
+  ctx.fillText(N+' sticky notes on a board sized for about 128', 10, h-10);
+}
+
+function initStoryBoards(){
+  const empty = el('board-empty');
+  empty.innerHTML = ['Ari\u2019s birthday','Wifi: sunshine22','Buy milk'].map(t=>`<span class="stickynote">${t}</span>`).join('');
+  const full = el('board-full');
+  const words = ['Ari\u2019s b-day','Wifi pw','Buy milk','Dentist 3pm','Mom\u2019s number','Locker code','Book due','Recipe','Bus time','Homework','Password','Gift idea','Meeting','Song name','Address'];
+  full.innerHTML = words.map(t=>`<span class="stickynote">${t}</span>`).join('');
+}
+
+// ---------- Canvas drawing (no external libs) ----------
+function setupCanvas(canvas){
+  const dpr=window.devicePixelRatio||1;
+  const w=canvas.clientWidth||canvas.parentElement.clientWidth||480;
+  const h=parseInt(canvas.getAttribute('height'))||200;
+  canvas.width=w*dpr; canvas.height=h*dpr;
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,w,h);
+  return {ctx,w,h};
+}
+
+function drawHeat(S,n,classes){
+  const canvas=el('heat'); const {ctx,w,h}=setupCanvas(canvas);
+  let max=1e-9; for(let a=0;a<n;a++) for(let c=0;c<classes;c++) if(S[a][c]>max) max=S[a][c];
+  const cellW=w/classes;
+  const rowsToShow=Math.min(n,128);
+  const cellH=h/rowsToShow;
+  for(let r=0;r<rowsToShow;r++){
+    const a=Math.floor(r*n/rowsToShow);
+    for(let c=0;c<classes;c++){
+      const v=S[a][c]/max;
+      const g=Math.floor(30+v*200), bch=Math.floor(60+v*180);
+      ctx.fillStyle=`rgb(${Math.floor(20+v*120)},${g},${bch})`;
+      ctx.fillRect(c*cellW, r*cellH, cellW+0.5, cellH+0.5);
+    }
+  }
+}
+
+function drawTruthBars(samples){
+  const canvas=el('truthbar'); const {ctx,w,h}=setupCanvas(canvas);
+  const n=samples.length; const bw=w/n;
+  samples.forEach((s,i)=>{
+    const x=i*bw;
+    const ok=s.truth===s.pred;
+    ctx.fillStyle= ok ? '#25d0a4' : '#ff6b6b';
+    ctx.fillRect(x+2, 10, bw-4, h-20);
+    ctx.fillStyle='#0a0c11'; ctx.font='9px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(s.truth, x+bw/2, h-6);
+  });
+  ctx.fillStyle='#8b93a7'; ctx.font='11px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('green = retrieved class matches ground truth · red = mismatch (digit = true class id)',6,20);
+}
+
+function drawFailCurve(currentLoad, currentAcc){
+  const canvas=el('failcurve'); const {ctx,w,h}=setupCanvas(canvas);
+  const pts=PRECOMP.load_factor_sweep;
+  const maxLoad=Math.max(...pts.map(p=>p.load_factor), currentLoad);
+  const pad=36;
+  const X=l=>pad+(l/maxLoad)*(w-pad-14);
+  const Y=a=>h-24-(a)*(h-40);
+  ctx.strokeStyle='#232838'; ctx.beginPath();
+  for(let g=0;g<=1;g+=0.25){ ctx.moveTo(pad,Y(g)); ctx.lineTo(w-14,Y(g)); }
+  ctx.stroke();
+  ctx.fillStyle='#8b93a7'; ctx.font='10px sans-serif'; ctx.textAlign='right';
+  [0,0.25,0.5,0.75,1.0].forEach(g=>ctx.fillText(g.toFixed(2),pad-4,Y(g)+3));
+  ctx.textAlign='center';
+  ctx.fillText('load factor N/n →', w/2, h-4);
+
+  ctx.strokeStyle='#5ab8ff'; ctx.lineWidth=2; ctx.beginPath();
+  pts.forEach((p,i)=>{ const x=X(p.load_factor), y=Y(p.accuracy_mean); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.stroke();
+
+  ctx.fillStyle='#5ab8ff33';
+  ctx.beginPath();
+  pts.forEach((p,i)=>{ const x=X(p.load_factor), y=Y(p.accuracy_max); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  for(let i=pts.length-1;i>=0;i--){ const x=X(pts[i].load_factor), y=Y(pts[i].accuracy_min); ctx.lineTo(x,y); }
+  ctx.closePath(); ctx.fill();
+
+  ctx.fillStyle='#ff6b6b';
+  ctx.beginPath(); ctx.arc(X(currentLoad), Y(currentAcc), 5, 0, 7); ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.fillStyle='#e9ecf3'; ctx.font='11px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('● your current setting', X(currentLoad)+8, Y(currentAcc)-6);
+}
+
+function drawBytesPlot(n, classes){
+  const canvas=el('bytesplot'); const {ctx,w,h}=setupCanvas(canvas);
+  const kv=PRECOMP.kv_cache_growth;
+  const stateBytes=n*classes*8;
+  const maxN=Math.max(...kv.map(p=>p.num_written));
+  const maxBytes=Math.max(...kv.map(p=>p.bytes), stateBytes);
+  const pad=44;
+  const X=nn=>pad+(nn/maxN)*(w-pad-14);
+  const Y=b=>h-24-(b/maxBytes)*(h-34);
+  ctx.strokeStyle='#232838'; ctx.beginPath();
+  for(let g=0;g<=1;g+=0.25){ ctx.moveTo(pad,Y(g*maxBytes)); ctx.lineTo(w-14,Y(g*maxBytes)); }
+  ctx.stroke();
+  ctx.fillStyle='#8b93a7'; ctx.font='10px sans-serif'; ctx.textAlign='right';
+  [0,0.25,0.5,0.75,1.0].forEach(g=>ctx.fillText(fmtBytes(Math.round(g*maxBytes)),pad-6,Y(g*maxBytes)+3));
+  ctx.textAlign='center'; ctx.fillText('sequence length (tokens written) →', w/2, h-4);
+
+  ctx.strokeStyle='#ff9d4d'; ctx.lineWidth=2; ctx.beginPath();
+  kv.forEach((p,i)=>{ const x=X(p.num_written), y=Y(p.bytes); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.stroke();
+  ctx.fillStyle='#ff9d4d'; ctx.textAlign='left'; ctx.font='11px sans-serif';
+  ctx.fillText('growing KV-cache (O(N))', X(maxN*0.55)+6, Y(kv[Math.floor(kv.length*0.55)].bytes)-6);
+
+  ctx.strokeStyle='#25d0a4'; ctx.lineWidth=2; ctx.beginPath();
+  ctx.moveTo(X(0),Y(stateBytes)); ctx.lineTo(X(maxN),Y(stateBytes)); ctx.stroke();
+  ctx.fillStyle='#25d0a4'; ctx.fillText('fixed associative state (O(1)) = '+fmtBytes(stateBytes), X(maxN*0.05), Y(stateBytes)-8);
+}
+
+// ---------- boot ----------
+initStoryBoards();
+el('s_load_simple').addEventListener('input', recomputeSimple);
+recomputeSimple();
+preset('hook');
+window.addEventListener('resize', ()=>{ recomputeSimple(); if(document.body.classList.contains('mode-tech')) recompute(); });
+</script>
+</body>
+</html>
